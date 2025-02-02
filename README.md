@@ -17,3 +17,6 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
+# Demo
+## Uploaded pdf of airline check-in pdf locally:
+<img width="845" alt="Screenshot 2025-02-01 at 8 55 44 PM" src="https://github.com/user-attachments/assets/d52a0623-436c-4f4d-a049-ae3e13a68bb7" />
