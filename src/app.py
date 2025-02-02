@@ -1,7 +1,11 @@
 import streamlit as st
-from embedding import PDFEmbeddingProcessor
-from langchain_ollama.llms import OllamaLLM
 import os
+from embedding import PDFEmbeddingProcessor
+from langchain_community.vectorstores import FAISS
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_ollama import ChatOllama
 
 def main():
     model_list = ["tinyllama"]
@@ -25,7 +29,6 @@ def main():
         # Get absolute path
         abs_file_path = os.path.abspath(temp_file_path)
 
-        llm = OllamaLLM(model=selected_model)
         processor = PDFEmbeddingProcessor(abs_file_path, selected_model)
         processor.process()
 
@@ -33,7 +36,24 @@ def main():
         query = st.text_input("Enter your question:")
 
         if query:
-            answer = llm.invoke(query)
+            retriever = processor.get_retriever()
+
+            template = """Answer the question based only on the following context:
+            {context}
+
+            Question: {question}
+            """
+            prompt = ChatPromptTemplate.from_template(template)
+            model = ChatOllama(model=selected_model,temperature=0,)
+
+            retrieval_chain = (
+                {"context": retriever, "question": RunnablePassthrough()}
+                | prompt
+                | model
+                | StrOutputParser()
+            )
+
+            answer = retrieval_chain.invoke(query)
             st.write("Answer:", answer)
 
 if __name__ == "__main__":
